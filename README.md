@@ -1,1 +1,1 @@
-<!-- My Shop Project -->
+<!-- My Shop -->
