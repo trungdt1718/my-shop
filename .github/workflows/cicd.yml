@@ -59,7 +59,10 @@ jobs:
 
       - name: Navigate to Frontend Directory
         run: cd frontend
-        
+
+      - name: List Files
+        run: ls -la
+
       - name: Install Dependencies
         run: npm install
 
