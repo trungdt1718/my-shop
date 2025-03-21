@@ -1,42 +1,3 @@
-# name: my-app
-
-# on:
-#   push:
-#     branches:
-#       - main
-
-# jobs:
-#   build-frontend:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Checkout code
-#         uses: actions/checkout@v2
-
-#       - name: Build and push frontend Docker image
-#         run: |
-#           docker build -t trungdt1718/my-shop-frontend:latest ./frontend
-#           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-#           docker push trungdt1718/my-shop-frontend:latest
-
-#   deploy:
-#     runs-on: ubuntu-latest
-#     needs: [ build-frontend]
-#     steps:
-#       - name: Deploy to EC2
-#         uses: appleboy/ssh-action@master
-#         with:
-#           host: ${{ secrets.EC2_HOST }}
-#           username: ${{ secrets.EC2_USER }}
-#           key: ${{ secrets.EC2_PRIVATE_KEY }}
-#           script: |
-#             docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-           
-#             # Deploy frontend
-#             docker pull trungdt1718/my-shop-frontend:latest
-#             docker stop my-shop-frontend-container || true
-#             docker rm my-shop-frontend-container || true
-#             docker run -d -p 5173:80 --name my-shop-frontend-container trungdt1718/my-shop-frontend:latest
-
 name: my-app
 
 on:
@@ -75,6 +36,7 @@ jobs:
         run: npm test
 
   build:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source
