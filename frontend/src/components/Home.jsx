@@ -1,4 +1,6 @@
 import React from 'react';
+import axios from 'axios'
+import { useEffect, useState } from 'react'
 import product1 from '../assets/product1.webp';
 import product2 from '../assets/product2.webp';
 import product3 from '../assets/product3.webp';
