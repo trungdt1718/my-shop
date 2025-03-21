@@ -9,13 +9,23 @@ import product6 from '../assets/product6.webp';
 import './Home.css';
 
 const Home = () => {
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    getNames();
+  }, [])
+
+  const getNames = async () => {
+    const response = await axios.get('http://13.54.254.238:5000/names');
+    setUserName(response.data);
+  }
   return (
     <div>
       <header>
         <div class="logo">My Shop</div>
         <nav>
           <div class="customer-login">
-          <a href="#" class="login">Đăng nhập</a>
+            <a href="#" class="login">Hello {userName}</a>
             <a href="#" class="customer-service">Trung tâm CSKH</a>
           </div>
           <ul>
