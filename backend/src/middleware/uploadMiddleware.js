@@ -2,27 +2,27 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Đảm bảo thư mục uploads tồn tại
+// Ensure uploads directory exists
 const uploadDir = path.join(__dirname, '../../uploads');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Cấu hình storage
+// Configure storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-    // Tạo tên file duy nhất bằng cách thêm timestamp
+    // Create unique filename by adding timestamp
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
-// Kiểm tra loại file
+// Check file type
 const fileFilter = (req, file, cb) => {
-  // Chỉ chấp nhận ảnh
+  // Only accept images
   if (file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
@@ -30,12 +30,12 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Tạo middleware upload
+// Create upload middleware
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024 // Giới hạn 5MB
+    fileSize: 5 * 1024 * 1024 // Limit 5MB
   }
 });
 
