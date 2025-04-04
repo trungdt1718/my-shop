@@ -1,0 +1,83 @@
+name: my-app
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: List Files
+        run: ls -la
+
+      - name: Navigate to Frontend Directory
+        run: cd frontend
+
+      - name: List Files
+        run: ls -la
+
+      - name: Install Dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Run Tests
+        working-directory: ./frontend
+        run: npm test
+
+  build-frontend:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build Docker Image
+        run: docker build -t trungdt1718/my-shop-frontend:latest ./frontend
+      - name: Publish image to docker hub
+        run: docker push trungdt1718/my-shop-frontend:latest   
+
+  deploy-frontend: 
+    needs: build-frontend
+    runs-on: aws-ec2    
+    steps:
+      - name: Pull image from docker hub
+        run: docker pull trungdt1718/my-shop-frontend:latest 
+      - name: Delete Old Container
+        run: docker rm -f reactContainer
+      - name: Run docker container
+        run: docker run -d -p 3000:80 --name reactContainer trungdt1718/my-shop-frontend   
+
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build Docker Image
+        run: docker build -t trungdt1718/my-shop-backend:latest ./backend
+      - name: Publish image to docker hub
+        run: docker push trungdt1718/my-shop-backend:latest
+
+  deploy-backend: 
+    needs: build-backend
+    runs-on: aws-ec2    
+    steps:
+      - name: Pull image from docker hub
+        run: docker pull trungdt1718/my-shop-backend:latest 
+      - name: Delete Old Container
+        run: docker rm -f nodeContainer
+      - name: Run docker container
+        run: docker run -d -p 5000:5000 --name nodeContainer trungdt1718/my-shop-backend
