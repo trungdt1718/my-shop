@@ -1,25 +1,63 @@
-import React from 'react';
-import axios from 'axios'
-import { useEffect, useState } from 'react'
-import product1 from '../assets/product1.webp';
-import product2 from '../assets/product2.webp';
-import product3 from '../assets/product3.webp';
-import product4 from '../assets/product4.webp';
-import product5 from '../assets/product5.webp';
-import product6 from '../assets/product6.webp';
-
+import React, { useState, useEffect } from 'react';
 import './Home.css';
 
+const API_URL = 'http://localhost:5000';
+
 const Home = () => {
-  const [userName, setUserName] = useState('');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    getNames();
-  }, [])
+    fetchProducts();
+  }, []);
 
-  const getNames = async () => {
-    const response = await axios.get('http://13.54.254.238:5000/names');
-    setUserName(response.data);
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/products`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch products');
+      }
+      const data = await response.json();
+      console.log('Fetched products:', data); // Debug log
+      setProducts(data);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error:', err); // Debug log
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(price);
+  };
+
+  if (loading) {
+    return (
+      <div className="page-wrapper">
+        <main>
+          <div className="main-container">
+            <div className="loading">Loading products...</div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="page-wrapper">
+        <main>
+          <div className="main-container">
+            <div className="error">Error: {error}</div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -30,15 +68,14 @@ const Home = () => {
           <div className="nav-container">
             <nav>
               <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">Products</a></li>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="/products">Products</a></li>
+                <li><a href="/about">About Us</a></li>
+                <li><a href="/contact">Contact</a></li>
               </ul>
             </nav>
             <div className="customer-actions">
-              <a href="#" className="btn btn-primary">Hello {userName}</a>
-              <a href="#" className="btn btn-outline">Customer Service</a>
+              <a href="#" className="btn btn-primary">Customer Service</a>
             </div>
           </div>
         </div>
@@ -48,144 +85,49 @@ const Home = () => {
         <div className="main-container">
           <h2 className="section-title">Featured Products</h2>
           <div className="product-grid">
-            <div className="product">
-              <div className="product-image">
-                <img src={product1} alt="Product 1" />
+            {products && products.length > 0 ? (
+              products.map((product) => (
+                <div key={product.id} className="product">
+                  <img
+                    src={`${API_URL}${product.imageUrl}`}
+                    alt={product.name}
+                    className="product-image"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/300x400?text=No+Image';
+                      e.target.onerror = null;
+                    }}
+                  />
+                  <div className="product-info">
+                    <h3 className="product-name">{product.name}</h3>
+                    <p className="product-price">{formatPrice(product.price)}</p>
+                    <div className="product-sizes">
+                      {(typeof product.sizes === 'string' ? JSON.parse(product.sizes) : product.sizes || []).map((size, index) => (
+                        <span key={index} className="size-option">
+                          {size}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="product-colors">
+                      {(typeof product.colors === 'string' ? JSON.parse(product.colors) : product.colors || []).map((color, index) => (
+                        <span
+                          key={index}
+                          className="color-option"
+                          style={{ backgroundColor: color }}
+                          title={color}
+                        ></span>
+                      ))}
+                    </div>
+                    <div className="product-actions">
+                      <button className="btn-add-cart">Add to Cart</button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="no-products">
+                <h3>No products available</h3>
               </div>
-              <div className="product-info">
-                <h3 className="product-name">T-Shirt</h3>
-                <p className="product-price">150,000 VND</p>
-                <div className="product-sizes">
-                  <span className="size-option active">S</span>
-                  <span className="size-option">M</span>
-                  <span className="size-option">L</span>
-                  <span className="size-option">XL</span>
-                </div>
-                <div className="product-colors">
-                  <span className="color-option active" style={{backgroundColor: '#000'}}></span>
-                  <span className="color-option" style={{backgroundColor: '#fff'}}></span>
-                  <span className="color-option" style={{backgroundColor: '#6e7174'}}></span>
-                </div>
-                <div className="product-actions">
-                  <button className="btn-add-cart">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="product">
-              <div className="product-image">
-                <img src={product2} alt="Product 2" />
-              </div>
-              <div className="product-info">
-                <h3 className="product-name">Long Sleeve Shirt</h3>
-                <p className="product-price">250,000 VND</p>
-                <div className="product-sizes">
-                  <span className="size-option">S</span>
-                  <span className="size-option active">M</span>
-                  <span className="size-option">L</span>
-                  <span className="size-option">XL</span>
-                </div>
-                <div className="product-colors">
-                  <span className="color-option active" style={{backgroundColor: '#000'}}></span>
-                  <span className="color-option" style={{backgroundColor: '#2f5acf'}}></span>
-                </div>
-                <div className="product-actions">
-                  <button className="btn-add-cart">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="product">
-              <div className="product-image">
-                <img src={product3} alt="Product 3" />
-              </div>
-              <div className="product-info">
-                <h3 className="product-name">T-Shirt</h3>
-                <p className="product-price">300,000 VND</p>
-                <div className="product-sizes">
-                  <span className="size-option">S</span>
-                  <span className="size-option">M</span>
-                  <span className="size-option active">L</span>
-                  <span className="size-option">XL</span>
-                </div>
-                <div className="product-colors">
-                  <span className="color-option active" style={{backgroundColor: '#000'}}></span>
-                  <span className="color-option" style={{backgroundColor: '#fff'}}></span>
-                </div>
-                <div className="product-actions">
-                  <button className="btn-add-cart">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="product">
-              <div className="product-image">
-                <img src={product4} alt="Product 4" />
-              </div>
-              <div className="product-info">
-                <h3 className="product-name">T-Shirt</h3>
-                <p className="product-price">199,000 VND</p>
-                <div className="product-sizes">
-                  <span className="size-option">S</span>
-                  <span className="size-option active">M</span>
-                  <span className="size-option">L</span>
-                  <span className="size-option">XL</span>
-                </div>
-                <div className="product-colors">
-                  <span className="color-option active" style={{backgroundColor: '#2f5acf'}}></span>
-                  <span className="color-option" style={{backgroundColor: '#6e7174'}}></span>
-                </div>
-                <div className="product-actions">
-                  <button className="btn-add-cart">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="product">
-              <div className="product-image">
-                <img src={product5} alt="Product 5" />
-              </div>
-              <div className="product-info">
-                <h3 className="product-name">Jacket</h3>
-                <p className="product-price">299,000 VND</p>
-                <div className="product-sizes">
-                  <span className="size-option">S</span>
-                  <span className="size-option">M</span>
-                  <span className="size-option active">L</span>
-                  <span className="size-option">XL</span>
-                </div>
-                <div className="product-colors">
-                  <span className="color-option active" style={{backgroundColor: '#000'}}></span>
-                  <span className="color-option" style={{backgroundColor: '#2f5acf'}}></span>
-                </div>
-                <div className="product-actions">
-                  <button className="btn-add-cart">Add to Cart</button>
-                </div>
-              </div>
-            </div>
-
-            <div className="product">
-              <div className="product-image">
-                <img src={product6} alt="Product 6" />
-              </div>
-              <div className="product-info">
-                <h3 className="product-name">Puffer Jacket</h3>
-                <p className="product-price">399,000 VND</p>
-                <div className="product-sizes">
-                  <span className="size-option">S</span>
-                  <span className="size-option">M</span>
-                  <span className="size-option">L</span>
-                  <span className="size-option active">XL</span>
-                </div>
-                <div className="product-colors">
-                  <span className="color-option active" style={{backgroundColor: '#000'}}></span>
-                  <span className="color-option" style={{backgroundColor: '#6e7174'}}></span>
-                </div>
-                <div className="product-actions">
-                  <button className="btn-add-cart">Add to Cart</button>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </main>
@@ -207,7 +149,7 @@ const Home = () => {
             </div>
           </div>
           <div className="copyright">
-            <p>&copy; {new Date().getFullYear()} Fashion Store. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} My Shop. All rights reserved.</p>
           </div>
         </div>
       </footer>

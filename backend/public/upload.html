@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Product</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], input[type="number"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .preview-image {
+            max-width: 200px;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+            margin-top: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload Product</h1>
+    <form id="productForm" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="image">Product Image:</label>
+            <input type="file" id="image" name="image" accept="image/*" required>
+            <img id="imagePreview" class="preview-image" style="display: none;">
+            <div id="imageError" class="error">Please select an image file</div>
+        </div>
+        <div class="form-group">
+            <label for="name">Product Name:</label>
+            <input type="text" id="name" name="name" required>
+            <div id="nameError" class="error">Product name is required</div>
+        </div>
+        <div class="form-group">
+            <label for="price">Price (VND):</label>
+            <input type="number" id="price" name="price" min="0" step="1000" required>
+            <div id="priceError" class="error">Price must be a positive number</div>
+        </div>
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" rows="4"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="sizes">Sizes:</label>
+            <div id="sizeCheckboxes">
+                <label><input type="checkbox" value="S" checked> S</label>
+                <label><input type="checkbox" value="M" checked> M</label>
+                <label><input type="checkbox" value="L" checked> L</label>
+                <label><input type="checkbox" value="XL" checked> XL</label>
+            </div>
+            <input type="hidden" id="sizes" name="sizes">
+            <div id="sizesError" class="error">Please select at least one size</div>
+        </div>
+        <div class="form-group">
+            <label for="colors">Colors:</label>
+            <div id="colorPickers">
+                <input type="color" value="#000000" title="Black">
+                <input type="color" value="#FFFFFF" title="White">
+                <input type="color" value="#2f5acf" title="Blue">
+                <input type="color" value="#6e7174" title="Gray">
+            </div>
+            <input type="hidden" id="colors" name="colors">
+            <div id="colorsError" class="error">Please select at least one color</div>
+        </div>
+        <div class="form-group">
+            <label for="stock">Stock:</label>
+            <input type="number" id="stock" name="stock" min="0" value="100" required>
+            <div id="stockError" class="error">Stock must be a positive number</div>
+        </div>
+        <button type="submit">Upload Product</button>
+    </form>
+
+    <script>
+        // Preview image
+        document.getElementById('image').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Update sizes hidden input when checkboxes change
+        document.getElementById('sizeCheckboxes').addEventListener('change', function() {
+            const checkedSizes = Array.from(this.querySelectorAll('input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+            document.getElementById('sizes').value = JSON.stringify(checkedSizes);
+        });
+
+        // Initialize sizes
+        const checkedSizes = Array.from(document.querySelectorAll('#sizeCheckboxes input[type="checkbox"]:checked'))
+            .map(cb => cb.value);
+        document.getElementById('sizes').value = JSON.stringify(checkedSizes);
+
+        // Update colors hidden input when color pickers change
+        document.getElementById('colorPickers').addEventListener('change', function() {
+            const selectedColors = Array.from(this.querySelectorAll('input[type="color"]'))
+                .map(input => input.value);
+            document.getElementById('colors').value = JSON.stringify(selectedColors);
+        });
+
+        // Initialize colors
+        const selectedColors = Array.from(document.querySelectorAll('#colorPickers input[type="color"]'))
+            .map(input => input.value);
+        document.getElementById('colors').value = JSON.stringify(selectedColors);
+
+        // Validate form before submit
+        function validateForm() {
+            let isValid = true;
+
+            // Validate image
+            const image = document.getElementById('image');
+            const imageError = document.getElementById('imageError');
+            if (!image.files[0]) {
+                imageError.style.display = 'block';
+                isValid = false;
+            } else {
+                imageError.style.display = 'none';
+            }
+
+            // Validate name
+            const name = document.getElementById('name');
+            const nameError = document.getElementById('nameError');
+            if (!name.value.trim()) {
+                nameError.style.display = 'block';
+                isValid = false;
+            } else {
+                nameError.style.display = 'none';
+            }
+
+            // Validate price
+            const price = document.getElementById('price');
+            const priceError = document.getElementById('priceError');
+            if (!price.value || price.value < 0) {
+                priceError.style.display = 'block';
+                isValid = false;
+            } else {
+                priceError.style.display = 'none';
+            }
+
+            // Validate sizes
+            const sizes = JSON.parse(document.getElementById('sizes').value);
+            const sizesError = document.getElementById('sizesError');
+            if (!sizes.length) {
+                sizesError.style.display = 'block';
+                isValid = false;
+            } else {
+                sizesError.style.display = 'none';
+            }
+
+            // Validate colors
+            const colors = JSON.parse(document.getElementById('colors').value);
+            const colorsError = document.getElementById('colorsError');
+            if (!colors.length) {
+                colorsError.style.display = 'block';
+                isValid = false;
+            } else {
+                colorsError.style.display = 'none';
+            }
+
+            // Validate stock
+            const stock = document.getElementById('stock');
+            const stockError = document.getElementById('stockError');
+            if (!stock.value || stock.value < 0) {
+                stockError.style.display = 'block';
+                isValid = false;
+            } else {
+                stockError.style.display = 'none';
+            }
+
+            return isValid;
+        }
+
+        // Submit form
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', document.getElementById('image').files[0]);
+            formData.append('name', document.getElementById('name').value);
+            formData.append('price', document.getElementById('price').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('sizes', document.getElementById('sizes').value);
+            formData.append('colors', document.getElementById('colors').value);
+            formData.append('stock', document.getElementById('stock').value);
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/products', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to upload product');
+                }
+
+                const result = await response.json();
+                alert('Product uploaded successfully!');
+                console.log(result);
+                
+                // Reset form
+                document.getElementById('productForm').reset();
+                document.getElementById('imagePreview').style.display = 'none';
+            } catch (error) {
+                alert('Error uploading product: ' + error.message);
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html> 
